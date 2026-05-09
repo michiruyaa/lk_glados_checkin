@@ -27,10 +27,15 @@ jobs:
 
       # ========== Mihomo 代理设置 ==========
       - name: Setup Mihomo Proxy
-        if: ${{ secrets.SUBSCRIBE_URL != '' }}
         env:
           SUBSCRIBE_URL: ${{ secrets.SUBSCRIBE_URL }}
         run: |
+          # 检查是否有订阅链接
+          if [ -z "$SUBSCRIBE_URL" ]; then
+            echo "未设置 SUBSCRIBE_URL，跳过 Mihomo 设置"
+            exit 0
+          fi
+          
           echo "=== 下载 Mihomo 内核 ==="
           # 获取最新版本号
           MIHOMO_VERSION=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
@@ -58,22 +63,19 @@ jobs:
       - name: Run Yamibo sign in
         env:
           YAMIBO_COOKIE: ${{ secrets.YAMIBO_COOKIE }}
-          # 如果有订阅链接，使用代理
-          HTTP_PROXY: ${{ secrets.SUBSCRIBE_URL != '' && 'http://127.0.0.1:7890' || '' }}
-          HTTPS_PROXY: ${{ secrets.SUBSCRIBE_URL != '' && 'http://127.0.0.1:7890' || '' }}
-          ALL_PROXY: ${{ secrets.SUBSCRIBE_URL != '' && 'socks5://127.0.0.1:7891' || '' }}
-          # 可选：直接指定代理 URL（优先级高于订阅）
+          SUBSCRIBE_URL: ${{ secrets.SUBSCRIBE_URL }}
           PROXY_URL: ${{ secrets.PROXY_URL }}
         run: |
-          # 如果设置了直接代理，覆盖环境变量
+          # 设置代理环境变量
           if [ -n "$PROXY_URL" ]; then
+            echo "使用直接代理: ${PROXY_URL//:*@/:***@}"
             export HTTP_PROXY="$PROXY_URL"
             export HTTPS_PROXY="$PROXY_URL"
-          fi
-          
-          # 显示当前代理设置（隐藏敏感信息）
-          if [ -n "$HTTP_PROXY" ]; then
-            echo "使用代理: ${HTTP_PROXY//:*@/:***@}"
+          elif [ -n "$SUBSCRIBE_URL" ]; then
+            echo "使用 Mihomo 代理: http://127.0.0.1:7890"
+            export HTTP_PROXY="http://127.0.0.1:7890"
+            export HTTPS_PROXY="http://127.0.0.1:7890"
+            export ALL_PROXY="socks5://127.0.0.1:7891"
           else
             echo "不使用代理"
           fi
