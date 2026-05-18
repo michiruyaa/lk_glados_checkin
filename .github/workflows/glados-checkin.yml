@@ -1,0 +1,35 @@
+name: GLaDOS 签到
+
+on:
+  schedule:
+    # 每天北京时间 8:30 执行 (UTC 00:30)
+    - cron: '30 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  glados-checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Create config
+        run: |
+          cat > config.yaml << 'EOF'
+          glados:
+            base_url: "${{ secrets.GLADOS_BASE_URL }}"
+            cookie: "${{ secrets.GLADOS_COOKIE }}"
+            timeout: 30
+          EOF
+
+      - name: Run GLaDOS checkin
+        run: python glados_checkin.py
