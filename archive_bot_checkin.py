@@ -4,7 +4,6 @@
 Archive Bot 自动签到脚本
 
 支持 EH-ArBot 和 Archive-at-Home 两种协议，支持多账号配置。
-配置通过 config.yaml 读取，与 LK / GLaDOS 签到脚本保持一致的风格。
 """
 
 import logging
@@ -76,6 +75,7 @@ def query_balance_eh_ar_bot(api_address: str, api_key: str) -> Optional[int]:
     try:
         resp = requests.post(url, headers=HEADERS, json={"apikey": api_key}, timeout=30)
         data = resp.json()
+        log.info(f"[EH-ArBot] balance response: {data}")
         if data.get("code") == 0:
             balance_data = data.get("data", {})
             return balance_data.get("GP") or balance_data.get("gp")
@@ -90,6 +90,7 @@ def check_in_eh_ar_bot(api_address: str, api_key: str) -> CheckInResult:
     try:
         resp = requests.post(url, headers=HEADERS, json={"apikey": api_key}, timeout=30)
         data = resp.json()
+        log.info(f"[EH-ArBot] checkin response: {data}")
         code = data.get("code")
         if code == 0:
             checkin_data = data.get("data", {})
@@ -119,6 +120,7 @@ def query_balance_archive_at_home(api_address: str, api_key: str) -> Optional[in
             },
             timeout=30,
         )
+        log.info(f"[Archive-at-Home] balance status={resp.status_code}, body={resp.text}")
         if resp.status_code == 200:
             data = resp.json()
             return data.get("GP") or data.get("gp") or data.get("balance")
@@ -140,6 +142,7 @@ def check_in_archive_at_home(api_address: str, api_key: str) -> CheckInResult:
             },
             timeout=30,
         )
+        log.info(f"[Archive-at-Home] checkin status={resp.status_code}, body={resp.text}")
         if resp.status_code == 200:
             data = resp.json()
             return CheckInResult(
