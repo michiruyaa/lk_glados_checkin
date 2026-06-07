@@ -9,8 +9,9 @@ Archive Bot 自动签到脚本
 
 import logging
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 import requests
 import yaml
@@ -43,6 +44,17 @@ HEADERS = {
 }
 
 
+# ==================== 数据类 ====================
+
+@dataclass
+class CheckInResult:
+    success: bool
+    reward: Optional[int] = None
+    balance: Optional[int] = None
+    already_checked_in: bool = False
+    message: str = ""
+
+
 # ==================== 工具函数 ====================
 
 def load_config() -> dict:
@@ -58,53 +70,45 @@ def load_config() -> dict:
     return config or {}
 
 
-def check_balance_eh_ar_bot(api_address: str, api_key: str) -> Optional[int]:
+def query_balance_eh_ar_bot(api_address: str, api_key: str) -> Optional[int]:
     """查询 EH-ArBot 余额，返回 GP 或 None"""
     url = f"{api_address}/balance"
-    log.info(f"[EH-ArBot] Checking balance...")
     try:
         resp = requests.post(url, headers=HEADERS, json={"apikey": api_key}, timeout=30)
         data = resp.json()
         if data.get("code") == 0:
             balance_data = data.get("data", {})
-            gp = balance_data.get("GP") or balance_data.get("gp")
-            log.info(f"[EH-ArBot] Balance: {gp} GP")
-            return gp
-        else:
-            log.warning(f"[EH-ArBot] Balance check failed: code={data.get('code')}, msg={data.get('msg')}")
-    except Exception as e:
-        log.error(f"[EH-ArBot] Balance check exception: {e}")
+            return balance_data.get("GP") or balance_data.get("gp")
+    except Exception:
+        pass
     return None
 
 
-def check_in_eh_ar_bot(api_address: str, api_key: str) -> bool:
+def check_in_eh_ar_bot(api_address: str, api_key: str) -> CheckInResult:
     """EH-ArBot 签到"""
     url = f"{api_address}/checkin"
-    log.info(f"[EH-ArBot] POST {url}")
     try:
         resp = requests.post(url, headers=HEADERS, json={"apikey": api_key}, timeout=30)
         data = resp.json()
         code = data.get("code")
         if code == 0:
             checkin_data = data.get("data", {})
-            get_gp = checkin_data.get("get_GP") or "?"
-            current_gp = checkin_data.get("current_GP") or "?"
-            log.info(f"[EH-ArBot] Check-in success! Got {get_gp} GP, current {current_gp} GP")
-            return True
+            return CheckInResult(
+                success=True,
+                reward=checkin_data.get("get_GP"),
+                balance=checkin_data.get("current_GP"),
+            )
         elif code == 7:
-            log.warning(f"[EH-ArBot] Already checked in today.")
-            return True
+            return CheckInResult(success=True, already_checked_in=True)
         else:
-            log.error(f"[EH-ArBot] Check-in failed: code={code}, msg={data.get('msg')}")
+            return CheckInResult(success=False, message=data.get("msg", f"code={code}"))
     except Exception as e:
-        log.error(f"[EH-ArBot] Check-in exception: {e}")
-    return False
+        return CheckInResult(success=False, message=str(e))
 
 
-def check_balance_archive_at_home(api_address: str, api_key: str) -> Optional[int]:
+def query_balance_archive_at_home(api_address: str, api_key: str) -> Optional[int]:
     """查询 Archive-at-Home 余额，返回 GP 或 None"""
     url = f"{api_address}/api/v1/me/balance"
-    log.info(f"[Archive-at-Home] Checking balance...")
     try:
         resp = requests.get(
             url,
@@ -117,20 +121,15 @@ def check_balance_archive_at_home(api_address: str, api_key: str) -> Optional[in
         )
         if resp.status_code == 200:
             data = resp.json()
-            gp = data.get("GP") or data.get("gp") or data.get("balance")
-            log.info(f"[Archive-at-Home] Balance: {gp} GP")
-            return gp
-        else:
-            log.warning(f"[Archive-at-Home] Balance check failed: status={resp.status_code}, body={resp.text}")
-    except Exception as e:
-        log.error(f"[Archive-at-Home] Balance check exception: {e}")
+            return data.get("GP") or data.get("gp") or data.get("balance")
+    except Exception:
+        pass
     return None
 
 
-def check_in_archive_at_home(api_address: str, api_key: str) -> bool:
+def check_in_archive_at_home(api_address: str, api_key: str) -> CheckInResult:
     """Archive-at-Home 签到"""
     url = f"{api_address}/api/v1/me/checkin"
-    log.info(f"[Archive-at-Home] POST {url}")
     try:
         resp = requests.post(
             url,
@@ -143,30 +142,36 @@ def check_in_archive_at_home(api_address: str, api_key: str) -> bool:
         )
         if resp.status_code == 200:
             data = resp.json()
-            reward = data.get("reward")
-            balance = data.get("balance")
-            reward_str = str(reward) if reward is not None else "?"
-            balance_str = str(balance) if balance is not None else "?"
-            log.info(f"[Archive-at-Home] Check-in success! Got {reward_str} GP, current {balance_str} GP")
-            return True
+            return CheckInResult(
+                success=True,
+                reward=data.get("reward"),
+                balance=data.get("balance"),
+            )
         elif resp.status_code == 409:
-            log.warning(f"[Archive-at-Home] Already checked in today.")
-            return True
+            return CheckInResult(success=True, already_checked_in=True)
         else:
-            log.error(f"[Archive-at-Home] Check-in failed: status={resp.status_code}, body={resp.text}")
+            return CheckInResult(success=False, message=f"status={resp.status_code}, body={resp.text}")
     except Exception as e:
-        log.error(f"[Archive-at-Home] Check-in exception: {e}")
-    return False
+        return CheckInResult(success=False, message=str(e))
+
+
+def get_account_label(index: int) -> str:
+    if index == 0:
+        return "默认账号"
+    return f"账号{index}"
+
+
+def get_unit_name(bot_type: str) -> str:
+    return "GP"
 
 
 def process_account(account_config: dict, index: int) -> bool:
-    """处理单个账号签到"""
+    """处理单个账号签到并打印格式化结果"""
     bot_type = (account_config.get("bot_type") or account_config.get("type") or "ehArBot").strip()
     api_address = (account_config.get("api_address") or "").strip()
     api_key = (account_config.get("api_key") or account_config.get("apikey") or "").strip()
 
     if not api_key:
-        log.info(f"Account {index + 1} missing api_key, skipping.")
         return True
 
     if not api_address:
@@ -174,18 +179,42 @@ def process_account(account_config: dict, index: int) -> bool:
 
     api_address = api_address.rstrip("/")
     bot_type_lower = bot_type.lower()
+    unit = get_unit_name(bot_type)
+    label = get_account_label(index)
 
-    log.info(f"========== Account {index + 1} [{bot_type}] ==========")
+    log.info("")
+    log.info(f"========== {label} ==========")
+    log.info(f"协议类型：{bot_type}")
 
+    # 查询余额
     if bot_type_lower in ("eharbot", "eh_ar_bot"):
-        check_balance_eh_ar_bot(api_address, api_key)
-        return check_in_eh_ar_bot(api_address, api_key)
+        balance = query_balance_eh_ar_bot(api_address, api_key)
+        result = check_in_eh_ar_bot(api_address, api_key)
     elif bot_type_lower in ("archiveathome", "archive_at_home"):
-        check_balance_archive_at_home(api_address, api_key)
-        return check_in_archive_at_home(api_address, api_key)
+        balance = query_balance_archive_at_home(api_address, api_key)
+        result = check_in_archive_at_home(api_address, api_key)
     else:
-        log.error(f"Account {index + 1} unknown bot_type: {bot_type}")
+        log.error(f"未知协议类型: {bot_type}")
         return False
+
+    # 打印签到结果
+    log.info("签到结果：")
+    if not result.success:
+        log.info(f"  签到失败：{result.message}")
+        return False
+
+    if result.already_checked_in:
+        log.info("  ②今日已签到")
+    else:
+        reward_str = str(result.reward) if result.reward is not None else "?"
+        log.info(f"  ①签到成功：获得{reward_str}{unit}")
+
+    # 打印当前余额（优先使用签到返回的余额，否则使用查询余额的结果）
+    final_balance = result.balance if result.balance is not None else balance
+    balance_str = str(final_balance) if final_balance is not None else "?"
+    log.info(f"当前余额：{balance_str}{unit}")
+
+    return True
 
 
 def main():
@@ -210,7 +239,10 @@ def main():
         log.warning("No archive bot accounts configured.")
         sys.exit(0)
 
-    log.info(f"Starting Archive Bot daily check-in for {len(accounts)} account(s)...")
+    log.info("=" * 40)
+    log.info("Archive Bot 每日签到开始")
+    log.info(f"当前配置账号数：{len(accounts)}")
+    log.info("=" * 40)
 
     all_success = True
     for i, account in enumerate(accounts):
@@ -219,15 +251,18 @@ def main():
             if not ok:
                 all_success = False
         except Exception as e:
-            log.error(f"Account {i + 1} unexpected exception: {e}")
+            log.error(f"{get_account_label(i)} 发生异常: {e}")
             all_success = False
 
+    log.info("")
+    log.info("=" * 40)
     if all_success:
-        log.info("All accounts checked in successfully.")
-        sys.exit(0)
+        log.info("全部账号签到完成")
     else:
-        log.error("Some accounts failed to check in.")
-        sys.exit(1)
+        log.error("部分账号签到失败")
+    log.info("=" * 40)
+
+    sys.exit(0 if all_success else 1)
 
 
 if __name__ == "__main__":
