@@ -1,4 +1,4 @@
-# LK & GLaDOS & Archive Bot & ESJ 自动签到
+# LK & GLaDOS & Archive Bot & ESJ & 贴吧 自动签到
 
 基于 [https://github.com/iszhangyt/lk-checkin](https://github.com/iszhangyt/lk-checkin) 开发的 GitHub Actions 自动签到工具，支持轻之国度（LK）、GLaDOS 每日自动签到。
 
@@ -20,6 +20,12 @@
 - **ESJ论坛水经验**
   - 自动登录 ESJ 论坛
   - 每日自动发表评论水经验
+
+- **百度贴吧**
+  - 自动获取关注吧列表及签到状态
+  - 对未签到的吧逐个触发签到
+  - 支持官方一键批量签到高等级吧
+  - 基于 [TiebaLite](https://github.com/HuanCheng65/TiebaLite) API 实现
 
 
 ## 使用方法
@@ -66,10 +72,17 @@
 | `ESJ_USERNAME` | ESJ 论坛账号邮箱 |
 | `ESJ_PASSWORD` | ESJ 论坛密码 |
 
+#### 贴吧签到配置
+
+| Secret 名称 | 说明 |
+|-------------|------|
+| `TIEBA_COOKIE` | 百度贴吧完整 Cookie |
+
+
 ### 3. 手动触发测试
 
 配置完成后，可以手动触发工作流测试：
 
 1. 进入仓库的 **Actions** 页面
-2. 选择 **LK 签到**、**GLaDOS 签到**、**Archive Bot 签到** 或 **ESJ 论坛水经验**
+2. 选择 **LK 签到**、**GLaDOS 签到**、**Archive Bot 签到**、**ESJ 论坛水经验** 或 **贴吧签到**
 3. 点击 **Run workflow** 按钮
