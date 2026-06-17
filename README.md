@@ -1,6 +1,6 @@
-# LK & GLaDOS & Archive Bot & ESJ & 贴吧 自动签到
+# 自动签到工具
 
-基于 [https://github.com/iszhangyt/lk-checkin](https://github.com/iszhangyt/lk-checkin) 开发的 GitHub Actions 自动签到工具，支持轻之国度（LK）、GLaDOS 每日自动签到。
+支持轻之国度、GLaDOS、Archive Bot、ESJ、百度贴吧、WorkBuddy 每日自动签到。
 
 
 ## 功能特性
@@ -24,8 +24,9 @@
 - **百度贴吧**
   - 自动获取关注吧列表及签到状态
   - 对未签到的吧逐个触发签到
-  - 支持官方一键批量签到高等级吧
-  - 基于 [TiebaLite](https://github.com/HuanCheng65/TiebaLite) API 实现
+
+- **WorkBuddy**
+  - 自动每日签到领取 Buddy 加油站奖励
 
 
 ## 使用方法
@@ -54,16 +55,14 @@
 
 #### Archive Bot 签到配置
 
-| 类型 Secret | 说明 | API 地址 Secret | 说明 | API Key Secret | 说明 |
-|-------------|------|-----------------|------|----------------|------|
-| `ARCHIVE_BOT_TYPE` | 默认账号协议类型：`ehArBot` 或 `archiveAtHome`（默认 `ehArBot`） | `ARCHIVE_BOT_API_ADDRESS` | 默认账号 API 服务器地址（可选） | `ARCHIVE_BOT_API_KEY` | 默认账号 API Key |
-| `ARCHIVE_BOT_TYPE_1` | 账号1 协议类型 | `ARCHIVE_BOT_API_ADDRESS_1` | 账号1 API 服务器地址 | `ARCHIVE_BOT_API_KEY_1` | 账号1 API Key |
-| `ARCHIVE_BOT_TYPE_2` | 账号2 协议类型 | `ARCHIVE_BOT_API_ADDRESS_2` | 账号2 API 服务器地址 | `ARCHIVE_BOT_API_KEY_2` | 账号2 API Key |
-| `ARCHIVE_BOT_TYPE_3` | 账号3 协议类型 | `ARCHIVE_BOT_API_ADDRESS_3` | 账号3 API 服务器地址 | `ARCHIVE_BOT_API_KEY_3` | 账号3 API Key |
-| `ARCHIVE_BOT_TYPE_4` | 账号4 协议类型 | `ARCHIVE_BOT_API_ADDRESS_4` | 账号4 API 服务器地址 | `ARCHIVE_BOT_API_KEY_4` | 账号4 API Key |
-| `ARCHIVE_BOT_TYPE_5` | 账号5 协议类型 | `ARCHIVE_BOT_API_ADDRESS_5` | 账号5 API 服务器地址 | `ARCHIVE_BOT_API_KEY_5` | 账号5 API Key |
+| 协议 Secret | 说明 | API 地址 Secret | API Key Secret |
+|-------------|------|-----------------|----------------|
+| `ARCHIVE_BOT_TYPE` | `ehArBot`/`archiveAtHome` | `ARCHIVE_BOT_API_ADDRESS` | `ARCHIVE_BOT_API_KEY` |
 
-> 支持最多 6 个账号，账号 0 使用基础 Secret，账号 1~5 使用带 `_1` ~ `_5` 后缀的 Secret。
+> 可配置多账户：
+> - `ARCHIVE_BOT_TYPE_1~5`
+> - `ARCHIVE_BOT_API_ADDRESS_1~5`
+> - `ARCHIVE_BOT_API_KEY_1~5`
 
 #### ESJ 论坛水经验配置
 
@@ -78,11 +77,19 @@
 |-------------|------|
 | `TIEBA_COOKIE` | 百度贴吧完整 Cookie |
 
+#### WorkBuddy 签到配置
+
+| Secret 名称 | 说明 |
+|-------------|------|
+| `WORKBUDDY_AUTH_JSON` | `auth.json` 的完整内容|
+
+> 本地运行 `workBuddy_token_mem.py` 提取并保存 `auth.json`。
+
 
 ### 3. 手动触发测试
 
 配置完成后，可以手动触发工作流测试：
 
 1. 进入仓库的 **Actions** 页面
-2. 选择 **LK 签到**、**GLaDOS 签到**、**Archive Bot 签到**、**ESJ 论坛水经验** 或 **贴吧签到**
+2. 选择 **LK 签到**、**GLaDOS 签到**、**Archive Bot 签到**、**ESJ 论坛水经验**、**贴吧签到** 或 **WorkBuddy 签到**
 3. 点击 **Run workflow** 按钮
