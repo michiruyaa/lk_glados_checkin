@@ -1,6 +1,6 @@
 # 自动签到工具
 
-支持轻之国度、GLaDOS、Archive Bot、ESJ、百度贴吧、WorkBuddy 每日自动签到。
+支持轻之国度、GLaDOS、Archive Bot、ESJ、WorkBuddy 每日自动签到。
 
 
 ## 功能特性
@@ -20,10 +20,6 @@
 - **ESJ论坛水经验**
   - 自动登录 ESJ 论坛
   - 每日自动发表评论水经验
-
-- **百度贴吧**
-  - 自动获取关注吧列表及签到状态
-  - 对未签到的吧逐个触发签到
 
 - **WorkBuddy**
   - 自动每日签到领取 Buddy 加油站奖励
@@ -71,12 +67,6 @@
 | `ESJ_USERNAME` | ESJ 论坛账号邮箱 |
 | `ESJ_PASSWORD` | ESJ 论坛密码 |
 
-#### 贴吧签到配置
-
-| Secret 名称 | 说明 |
-|-------------|------|
-| `TIEBA_COOKIE` | 百度贴吧完整 Cookie |
-
 #### WorkBuddy 签到配置
 
 | Secret 名称 | 说明 |
@@ -91,5 +81,5 @@
 配置完成后，可以手动触发工作流测试：
 
 1. 进入仓库的 **Actions** 页面
-2. 选择 **LK 签到**、**GLaDOS 签到**、**Archive Bot 签到**、**ESJ 论坛水经验**、**贴吧签到** 或 **WorkBuddy 签到**
+2. 选择 **LK 签到**、**GLaDOS 签到**、**Archive Bot 签到**、**ESJ 论坛水经验** 或 **WorkBuddy 签到**
 3. 点击 **Run workflow** 按钮
