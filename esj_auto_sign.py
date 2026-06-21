@@ -1,8 +1,22 @@
 """ESJ论坛自动水经验脚本"""
+import json
 import os
-import time
 import random
+import time
+import sys
+import io
 from playwright.sync_api import sync_playwright
+
+# Ensure stdout/stderr use UTF-8 to avoid encoding errors on Windows consoles
+try:
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    else:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+except Exception:
+    pass
 
 # ESJ论坛配置
 ESJ_LOGIN_URL = "https://www.esjzone.one/my/login"
@@ -13,7 +27,7 @@ ESJ_POST_URLS = [
 ESJ_COMMENT_POOL = [
     "(゜∀゜*)",
     "(⁠・⁠∀⁠・⁠)",
-    "(⁠ ⁠╹⁠▽⁠╹⁠ ⁠)",
+    "(⁠ ⁠╹⁠▽╹⁠ ⁠)",
     "(´・ω・｀)",
     "₍˄·͈༝·͈˄*₎◞ ̑̑",
     "(・ω・)",
@@ -22,26 +36,26 @@ ESJ_COMMENT_POOL = [
     "Ciallo～(∠・ω< )⌒☆",
 ]
 
+
 def get_esj_credentials():
     """从环境变量获取ESJ账号密码"""
     username = os.environ.get('ESJ_USERNAME')
     password = os.environ.get('ESJ_PASSWORD')
-    
+
     if not username or not password:
         print("Error: 未设置ESJ_USERNAME或ESJ_PASSWORD环境变量")
         return None, None
-    
+
     return username, password
+
 
 def auto_login_esj(page, username, password):
     """自动登录ESJ，返回 True 表示成功"""
     try:
-        # 访问登录页，等待网络空闲
-        page.goto(ESJ_LOGIN_URL, wait_until='networkidle', timeout=30000)
+        page.goto(ESJ_LOGIN_URL, wait_until='networkidle', timeout=60000)
         page.wait_for_timeout(2000)
         print("访问ESJ登录页")
 
-        # 填写邮箱和密码（更精确的选择器）
         email_input = page.locator("form.login-box input[name='email'][type='email']").first
         if not email_input.is_visible(timeout=5000):
             print("未找到邮箱输入框")
@@ -59,7 +73,6 @@ def auto_login_esj(page, username, password):
         page.wait_for_timeout(500)
         print("已填写邮箱和密码")
 
-        # 点击登录按钮
         login_button = page.locator("form.login-box a.btn-send[data-form='login-box'][data-send='mem_login']").first
         if not login_button.is_visible(timeout=3000):
             login_button = page.locator("form.login-box a:has-text('登入')").first
@@ -73,7 +86,7 @@ def auto_login_esj(page, username, password):
                 print("点击登录按钮")
             except Exception as click_error:
                 print(f"点击登录按钮失败，尝试JavaScript点击: {click_error}")
-                page.evaluate("document.querySelector('form.login-box a.btn-send[data-form=\\\'login-box\\\'][data-send=\\\'mem_login\\\']')?.click()")
+                page.evaluate("document.querySelector('form.login-box a.btn-send[data-form=\\'login-box\\'][data-send=\\'mem_login\\']')?.click()")
                 print("已通过JavaScript点击登录按钮")
 
             page.wait_for_timeout(6000)
@@ -105,189 +118,186 @@ def auto_login_esj(page, username, password):
         print(f"自动登录失败，当前URL: {current_url}")
         return False
     except Exception as e:
-        print(f"自动登录过程中出现异常: {e}")
-        return False
+            error_msg = str(e).encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+            print(f"自动登录过程中出现异常: {error_msg}")
+
 
 def esj_sign():
     """执行ESJ论坛水经验流程，返回 True 表示成功，False 表示失败"""
-    # 获取账号密码
     username, password = get_esj_credentials()
     if not username or not password:
         return False
-    
+
     with sync_playwright() as p:
-        # 启动浏览器
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        
+
         try:
             print("\n=== 开始ESJ论坛水经验 ===")
-            
-            # 自动登录
+
             if not auto_login_esj(page, username, password):
                 print("登录失败，无法继续水经验")
                 return False
-            
-            # 随机选择一个帖子
+
             post_url = random.choice(ESJ_POST_URLS)
             print(f"随机选择帖子: {post_url}")
-            page.goto(post_url, wait_until='domcontentloaded')
+            page.goto(post_url, wait_until='domcontentloaded', timeout=60000)
             page.wait_for_timeout(3000)
-            
-            # 检查登录状态：如果存在昵称输入框，说明未登录
+
             nickname_input = page.locator("input[name='nickname'][placeholder*='暱稱']").first
-            if nickname_input.is_visible():
+            if nickname_input.is_visible(timeout=3000):
                 print("检测到昵称输入框，说明当前未登录")
                 print("尝试重新登录...")
-                
-                # 重新登录
                 if not auto_login_esj(page, username, password):
                     print("重新登录失败")
                     return False
-                
-                # 重新访问帖子
-                page.goto(post_url, wait_until='domcontentloaded')
+                page.goto(post_url, wait_until='domcontentloaded', timeout=60000)
                 page.wait_for_timeout(3000)
-                
-                # 再次检查登录状态
                 nickname_input = page.locator("input[name='nickname'][placeholder*='暱稱']").first
-                if nickname_input.is_visible():
+                if nickname_input.is_visible(timeout=3000):
                     print("重新登录后仍未登录成功")
                     return False
                 print("重新登录成功")
-            
-            # 进行三次评论，每次必须成功才继续
+
             for i in range(1, 4):
                 print(f"\n--- 第 {i} 次评论 ---")
                 try:
-                    # 等待评论编辑器元素
                     comment_editor = page.locator("#commentEditor").first
                     if not comment_editor.is_visible(timeout=10000):
                         comment_editor = page.locator("div[contenteditable='true']").first
 
-                    if comment_editor.is_visible():
-                        comment_text = random.choice(ESJ_COMMENT_POOL)
-                        print(f"评论内容: {comment_text}")
-
-                        try:
-                            escaped_comment = comment_text.replace("'", "\\'").replace('"', '\\"')
-                            js_code = f"""
-                                const editor = document.querySelector('#commentEditor');
-                                const contentInput = document.querySelector('input[name=\\'content\\']');
-                                if (editor) {{
-                                    editor.innerHTML = '{escaped_comment}';
-                                    editor.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                                }}
-                                if (contentInput) {{
-                                    contentInput.value = '{escaped_comment}';
-                                    contentInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                                    contentInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                                }}
-                            """
-                            page.evaluate(js_code)
-                            print("已设置评论内容")
-                        except Exception as js_error:
-                            print(f"JavaScript 注入评论失败: {js_error}")
-                            try:
-                                comment_editor.click()
-                                page.wait_for_timeout(500)
-                                comment_editor.type(comment_text)
-                                print("已通过 type 方法输入评论内容")
-                            except Exception as type_error:
-                                print(f"type 方法输入失败: {type_error}")
-                                return False
-
-                        page.wait_for_timeout(1000)
-
-                        # 验证是否已设置内容
-                        content_input = page.locator("input[name='content']").first
-                        try:
-                            if content_input.is_visible(timeout=2000):
-                                current_value = content_input.input_value()
-                                if comment_text not in current_value:
-                                    print(f"✗ 隐藏内容未设置成功: {current_value}")
-                                    return False
-                                print(f"✓ 隐藏内容已设置: {current_value}")
-                            else:
-                                print("未找到隐藏评论内容输入框，继续尝试提交")
-                        except Exception as e:
-                            print(f"验证隐藏输入内容时出错: {e}")
-
-                        submit_btn = None
-                        submit_selectors = [
-                            "a.btn.btn-pill.btn-primary.btn-send[data-form='commentEditor'][data-send='forum_reply']",
-                            "a.btn.btn-pill.btn-primary.btn-send",
-                            "a.btn-send[data-send='forum_reply']",
-                            "a.btn-send",
-                        ]
-                        for selector in submit_selectors:
-                            try:
-                                btn = page.locator(selector).first
-                                if btn.is_visible(timeout=2000):
-                                    submit_btn = btn
-                                    print(f"找到送出按钮使用选择器: {selector}")
-                                    break
-                            except Exception as e:
-                                print(f"选择器 {selector} 错误: {e}")
-                                continue
-
-                        if submit_btn and submit_btn.is_visible():
-                            print("点击送出按钮...")
-                            try:
-                                submit_btn.scroll_into_view_if_needed()
-                                page.wait_for_timeout(500)
-                                submit_btn.click(timeout=10000)
-                                print("已点击送出按钮")
-                            except Exception as click_error:
-                                print(f"点击送出按钮失败，尝试 force 点击: {click_error}")
-                                try:
-                                    submit_btn.click(force=True, timeout=10000)
-                                    print("已点击送出按钮（force方式）")
-                                except Exception as force_error:
-                                    print(f"force 点击失败，尝试 JavaScript 点击: {force_error}")
-                                    page.evaluate("document.querySelector('a.btn.btn-pill.btn-primary.btn-send[data-form=\\'commentEditor\\'][data-send=\\'forum_reply\\']')?.click()")
-                                    print("已通过 JavaScript 点击送出按钮")
-
-                            page.wait_for_timeout(4000)
-                            success = False
-                            for attempt in range(15):
-                                time.sleep(1)
-                                try:
-                                    current_value = content_input.input_value() if content_input.is_visible() else ''
-                                    if not current_value or current_value != comment_text:
-                                        success = True
-                                        print(f"第 {i} 次评论成功（检测到内容已清空或变化）")
-                                        break
-                                except Exception:
-                                    success = True
-                                    break
-                            if not success:
-                                print(f"第 {i} 次评论失败：未检测到成功标志")
-                                return False
-                        else:
-                            print("未找到送出按钮")
-                            return False
-                    else:
+                    if not comment_editor.is_visible(timeout=10000):
                         print("未找到评论编辑器")
                         return False
+
+                    comment_text = random.choice(ESJ_COMMENT_POOL)
+                    print(f"评论内容: {comment_text}")
+
+                    # 使用安全的方式注入 JavaScript，避免 f-string 中的转义问题
+                    js_code = """
+                        const text = %s;
+                        const editorWrapper = document.querySelector('#commentEditor');
+                        const editable = editorWrapper?.querySelector('.fr-element.fr-view') || editorWrapper?.querySelector('.fr-element') || editorWrapper;
+                        const updateEditable = (el) => {
+                            el.innerHTML = text;
+                            el.textContent = text;
+                            el.dispatchEvent(new Event('input', { bubbles: true }));
+                            el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+                            el.dispatchEvent(new Event('blur', { bubbles: true }));
+                        };
+                        if (window.jQuery && window.jQuery('#commentEditor').data('froala.editor')) {
+                            try {
+                                window.jQuery('#commentEditor').froalaEditor('html.set', text, true);
+                            } catch (e) {
+                                console.warn('froalaEditor set failed', e);
+                            }
+                        }
+                        if (editable) {
+                            updateEditable(editable);
+                        }
+                        const contentInput = document.querySelector('input[name="content"]');
+                        if (contentInput) {
+                            contentInput.value = text;
+                            contentInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            contentInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            contentInput.dispatchEvent(new Event('blur', { bubbles: true }));
+                        }
+                    """ % json.dumps(comment_text)
+                    page.evaluate(js_code)
+                    print("已设置评论内容")
+                    page.wait_for_timeout(1000)
+
+                    content_input = page.locator("input[name='content']").first
+                    try:
+                        if content_input.is_visible(timeout=2000):
+                            current_value = content_input.input_value()
+                            print(f"隐藏内容值: {current_value}")
+                            if comment_text not in current_value:
+                                print("✗ 隐藏内容未设置成功")
+                                return False
+                        else:
+                            print("未找到隐藏评论内容输入框，继续尝试提交")
+                    except Exception as e:
+                        error_msg = str(e).encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+                        print(f"验证隐藏输入内容时出错: {error_msg}")
+
+                    submit_btn = None
+                    submit_selectors = [
+                        "a.btn.btn-pill.btn-primary.btn-send[data-form='commentEditor'][data-send='forum_reply']",
+                        "a.btn.btn-pill.btn-primary.btn-send",
+                        "a.btn-send[data-send='forum_reply']",
+                        "a.btn-send",
+                    ]
+                    for selector in submit_selectors:
+                        try:
+                            btn = page.locator(selector).first
+                            if btn.is_visible(timeout=2000):
+                                submit_btn = btn
+                                print(f"找到送出按钮: {selector}")
+                                break
+                        except Exception as e:
+                            error_msg = str(e).encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+                            print(f"选择器 {selector} 异常: {error_msg}")
+                            continue
+
+                    if not submit_btn or not submit_btn.is_visible(timeout=2000):
+                        print("未找到送出按钮")
+                        return False
+
+                    print("点击送出按钮...")
+                    try:
+                        submit_btn.scroll_into_view_if_needed()
+                        page.wait_for_timeout(500)
+                        submit_btn.click(timeout=10000)
+                        print("已点击送出按钮")
+                    except Exception as click_error:
+                        print(f"点击送出按钮失败: {click_error}")
+                        try:
+                            submit_btn.click(force=True, timeout=10000)
+                            print("已通过 force 点击送出按钮")
+                        except Exception as force_error:
+                            print(f"force 点击失败: {force_error}")
+                            page.evaluate("document.querySelector('a.btn.btn-pill.btn-primary.btn-send[data-form=\\'commentEditor\\'][data-send=\\'forum_reply\\']')?.click()")
+                            print("已通过 JavaScript 点击送出按钮")
+
+                    page.wait_for_timeout(4000)
+                    success = False
+                    for attempt in range(10):
+                        time.sleep(1)
+                        try:
+                            current_value = content_input.input_value() if content_input.is_visible() else ''
+                            if not current_value or current_value != comment_text:
+                                success = True
+                                print(f"第 {i} 次评论成功")
+                                break
+                        except Exception:
+                            success = True
+                            break
+                    if not success:
+                        print(f"第 {i} 次评论失败：未检测到成功标志")
+                        return False
                 except Exception as e:
-                    print(f"第 {i} 次评论过程中出现异常: {e}")
+                    error_msg = str(e).encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+                    print(f"第 {i} 次评论过程中出现异常: {error_msg}")
                     return False
             
             print("ESJ论坛水经验流程执行完毕（三次评论成功）")
             return True
         except Exception as e:
-            print(f"水经验过程中出现异常: {e}")
+            error_msg = str(e).encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+            print(f"水经验过程中出现异常: {error_msg}")
             return False
         finally:
             browser.close()
             print("已关闭浏览器")
+
 
 def main():
     """主函数"""
     success = esj_sign()
     print("\nESJ论坛水经验流程执行完毕")
     return success
+
 
 if __name__ == "__main__":
     success = main()
