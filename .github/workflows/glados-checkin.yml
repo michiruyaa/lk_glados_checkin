@@ -24,7 +24,7 @@ jobs:
 
       - name: Create config
         run: |
-          cat > config.yaml << 'EOF'
+          cat > src/glados/config.yaml << 'EOF'
           glados:
             base_url: "${{ secrets.GLADOS_BASE_URL }}"
             cookie: "${{ secrets.GLADOS_COOKIE }}"
@@ -32,4 +32,4 @@ jobs:
           EOF
 
       - name: Run GLaDOS checkin
-        run: python glados_checkin.py
+        run: python src/glados/glados_checkin.py

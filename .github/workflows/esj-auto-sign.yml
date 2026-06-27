@@ -1,4 +1,4 @@
-name: ESJ论坛自动水经验
+name: ESJ每日三评
 
 on:
   schedule:
@@ -26,14 +26,14 @@ jobs:
           pip install playwright
           playwright install chromium
           
-      - name: 执行ESJ论坛水经验
+      - name: 执行esj每日三评
         env:
           ESJ_USERNAME: ${{ secrets.ESJ_USERNAME }}
           ESJ_PASSWORD: ${{ secrets.ESJ_PASSWORD }}
-        run: python esj_auto_sign.py
+        run: python src/esj/esj_auto_sign.py
         
       - name: 检查执行结果
         if: always()
         run: |
-          echo "水经验任务执行完成"
+          echo "三评任务执行完成"
           echo "请查看上方日志了解详细执行情况"

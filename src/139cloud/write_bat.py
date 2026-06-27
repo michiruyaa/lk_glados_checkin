@@ -1,4 +1,6 @@
-@echo off
+import os
+
+bat_content = r'''@echo off
 chcp 65001 >nul
 REM CaiYun Auth Capture Tool
 
@@ -9,8 +11,8 @@ echo ============================================
 echo.
 
 cd /d "%~dp0"
-set "PYTHON=C:\Users\Administrator\.workbuddy\binaries\python\versions\3.14.3\python.exe"
-set "MITMPROXY=C:\Users\Administrator\.workbuddy\binaries\python\versions\3.14.3\Scripts\mitmproxy.exe"
+set "MITMPROXY=C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\mitmproxy.exe"
+set "PYTHON=C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe"
 set "CAPTURE_SCRIPT=%~dp0capture_auth.py"
 set "PROXY_PORT=8088"
 
@@ -71,12 +73,19 @@ reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v Pr
 echo [OK] System proxy restored
 echo.
 
-if exist "%~dp0..\captured_auth.txt" (
+if exist "%~dp0..\..\captured_auth.txt" (
     echo [OK] Authorization captured!
-    type "%~dp0..\captured_auth.txt"
+    type "%~dp0..\..\captured_auth.txt"
 ) else (
     echo [!] No Authorization captured, please retry
 )
 
 echo.
+echo [*] 运行 python src/139cloud/139cloud_checkin.py 进行签到
+echo.
 pause
+'''
+
+with open('capture.bat', 'w', encoding='gbk') as f:
+    f.write(bat_content)
+print('capture.bat written in GBK encoding')

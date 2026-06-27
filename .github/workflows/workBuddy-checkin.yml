@@ -25,4 +25,4 @@ jobs:
       - name: Run WorkBuddy checkin
         env:
           AUTH_JSON: ${{ secrets.WORKBUDDY_AUTH_JSON }}
-        run: python workBuddy_checkin.py
+        run: python src/workBuddy/workBuddy_checkin.py

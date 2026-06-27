@@ -5,9 +5,9 @@
 功能：自动签到、公众号签到、通知任务、云朵汇总
 
 使用方法：
-  1. 先在本地运行 capture_139cloud/capture.bat 从小程序抓包获取 Authorization
+  1. 先在本地运行 src/139cloud/capture.bat 从小程序抓包获取 Authorization
   2. 将 captured_auth.txt 的完整内容添加到 GitHub Secrets: CAPTURED_AUTH
-  3. 或直接在本地运行 python 139cloud_checkin.py
+  3. 或直接在本地运行 python src/139cloud/139cloud_checkin.py
 
 captured_auth.txt 格式（自动生成的）：
   auth = Basic xxxxxxxx
@@ -37,7 +37,7 @@ if sys.platform == "win32":
 # 配置参数
 # ============================================================
 
-CAPTURED_AUTH_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "captured_auth.txt")
+CAPTURED_AUTH_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "captured_auth.txt")
 
 UA = (
     "Mozilla/5.0 (Linux; Android 12; Mi 10 Pro Build/SKQ1.211006.001; wv) "
@@ -85,7 +85,7 @@ def load_captured_auth(path: str = CAPTURED_AUTH_PATH) -> Dict[str, str]:
         print()
         log_info("请按以下步骤获取 Authorization：")
         log_info("  1. 关闭微信 PC 版")
-        log_info("  2. 双击 capture_139cloud/capture.bat 启动抓包工具")
+        log_info("  2. 双击 src/139cloud/capture.bat 启动抓包工具")
         log_info("  3. 打开微信，进入'中国移动云盘'小程序")
         log_info("  4. 点击'云朵中心'或刷新页面")
         log_info("  5. 看到 [OK] 成功捕获 后按 Ctrl+C 关闭")

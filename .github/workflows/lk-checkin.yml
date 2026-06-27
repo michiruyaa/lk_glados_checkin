@@ -24,7 +24,7 @@ jobs:
 
       - name: Create config
         run: |
-          cat > config.yaml << 'EOF'
+          cat > src/lk/config.yaml << 'EOF'
           lk:
             security_key: "${{ secrets.LK_SECURITY_KEY }}"
             username: "${{ secrets.LK_USERNAME }}"
@@ -32,4 +32,4 @@ jobs:
           EOF
 
       - name: Run LK checkin
-        run: python lk_checkin.py
+        run: python src/lk/lk_checkin.py

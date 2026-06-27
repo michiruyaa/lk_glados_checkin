@@ -17,9 +17,9 @@
   - 自动每日签到获取 GP
   - 支持多账号配置
 
-- **ESJ论坛水经验**
+- **ESJ每日三评**
   - 自动登录 ESJ 论坛
-  - 每日自动发表评论水经验
+  - 每日自动发表三次评论
 
 - **WorkBuddy**
   - 自动每日签到领取 Buddy 加油站奖励
@@ -64,7 +64,7 @@
 > - `ARCHIVE_BOT_API_ADDRESS_1~5`
 > - `ARCHIVE_BOT_API_KEY_1~5`
 
-#### ESJ 论坛水经验配置
+#### ESJ 配置
 
 | Secret 名称 | 说明 |
 |-------------|------|
@@ -85,7 +85,7 @@
 |-------------|------|
 | `CAPTURED_AUTH` | `captured_auth.txt` 的完整内容 |
 
-> 本地运行 `capture_139cloud/capture.bat` 提取并保存 `captured_auth.txt`。
+> 本地运行 `capture.bat` 提取并保存 `captured_auth.txt`。
 
 
 ### 3. 手动触发测试

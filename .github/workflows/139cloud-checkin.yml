@@ -25,4 +25,4 @@ jobs:
       - name: Run 139 Cloud checkin
         env:
           CAPTURED_AUTH: ${{ secrets.CAPTURED_AUTH }}
-        run: python 139cloud_checkin.py
+        run: python src/139cloud/139cloud_checkin.py

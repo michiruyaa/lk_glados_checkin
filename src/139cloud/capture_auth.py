@@ -27,7 +27,7 @@ TARGET_DOMAINS = [
 ]
 
 # 保存路径
-SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 CONFIG_PATH = os.path.join(SAVE_DIR, "config.ini")
 AUTH_FILE = os.path.join(SAVE_DIR, "captured_auth.txt")
 
@@ -104,7 +104,7 @@ def _save_auth(auth: str, host: str, device_id: str = ""):
     if device_id:
         ctx.log.info(f"  设备ID: {device_id[:30]}...")
     ctx.log.info(f"=" * 60)
-    ctx.log.info("  现在可以关闭代理，运行 139cloud_checkin.py 进行签到了")
+    ctx.log.info("  现在可以关闭代理，运行 python src/139cloud/139cloud_checkin.py 进行签到了")
     ctx.log.info(f"=" * 60)
 
 
