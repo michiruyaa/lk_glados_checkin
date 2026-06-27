@@ -1,6 +1,6 @@
 # 自动签到工具
 
-支持轻之国度、GLaDOS、Archive Bot、ESJ、WorkBuddy 每日自动签到。
+支持轻之国度、GLaDOS、Archive Bot、ESJ、WorkBuddy、中国移动云盘 每日自动签到。
 
 
 ## 功能特性
@@ -23,6 +23,10 @@
 
 - **WorkBuddy**
   - 自动每日签到领取 Buddy 加油站奖励
+
+- **中国移动云盘**
+  - 自动每日签到领取云朵
+  - 自动完成公众号签到和通知任务
 
 
 ## 使用方法
@@ -75,11 +79,19 @@
 
 > 本地运行 `workBuddy_token_mem.py` 提取并保存 `auth.json`。
 
+#### 中国移动云盘 签到配置
+
+| Secret 名称 | 说明 |
+|-------------|------|
+| `CAPTURED_AUTH` | `captured_auth.txt` 的完整内容 |
+
+> 本地运行 `capture_139cloud/capture.bat` 提取并保存 `captured_auth.txt`。
+
 
 ### 3. 手动触发测试
 
 配置完成后，可以手动触发工作流测试：
 
 1. 进入仓库的 **Actions** 页面
-2. 选择 **LK 签到**、**GLaDOS 签到**、**Archive Bot 签到**、**ESJ 论坛水经验** 或 **WorkBuddy 签到**
+2. 选择相应的签到工作流
 3. 点击 **Run workflow** 按钮
