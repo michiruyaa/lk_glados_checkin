@@ -1,6 +1,6 @@
 # 自动签到工具
 
-支持轻之国度、GLaDOS、Archive Bot、ESJ、WorkBuddy、中国移动云盘 每日自动签到。
+支持轻之国度、GLaDOS、Archive Bot、ESJ Zone、WorkBuddy、中国移动云盘 每日自动签到。
 
 
 ## 功能特性
@@ -17,7 +17,7 @@
   - 自动每日签到获取 GP
   - 支持多账号配置
 
-- **ESJ每日三评**
+- **ESJ Zone 每日评论**
   - 自动登录 ESJ 论坛
   - 每日自动发表三次评论
 
@@ -64,7 +64,7 @@
 > - `ARCHIVE_BOT_API_ADDRESS_1~5`
 > - `ARCHIVE_BOT_API_KEY_1~5`
 
-#### ESJ 配置
+#### ESJ Zone 配置
 
 | Secret 名称 | 说明 |
 |-------------|------|
